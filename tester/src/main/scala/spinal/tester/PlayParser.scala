@@ -5,41 +5,20 @@ import spinal.lib.hdl._
 
 object playParser extends App {
 
-  class bb extends BlackBox {
+  class toplevel extends Component {
     val io = IOparser.run(
-    """
-        module ctrl(
+      """
+         module ctrl(
       input cond0,
   input [15:0] addr,
-  output b,
-  output signed [7:0] output
-);
-
-assign output_valid = a
-
-endmodule
-    """
+  output output_valid,
+  output signed [7:0] output_payload
+)
+      """
     )
 
-    noIoPrefix()
-
-  }
-
-  class toplevel extends Component {
-    val io = new Bundle {
-      val a = in Bool()
-      val addr = in Bits(16 bits)
-      val b = out Bool()
-      val output = out (Reg(SInt(8 bits)))
-    }
-
-    val black = new bb
-    black.io.addr := io.addr
-    black.io.cond0 := io.a
-
-    io.b := black.io.output_valid
-    io.output := black.io.output_payload
-
+    io.output_valid := False
+    io.output_payload := -1
   }
 
   SpinalVerilog(new toplevel)
