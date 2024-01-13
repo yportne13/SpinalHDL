@@ -155,6 +155,9 @@ trait VerilogBase extends VhdlVerilogBase{
       case e : EnumEncoded => emitEnumType(e.getDefinition, e.getEncoding)
     }
     case `TypeStruct` => emitStructType(e.asInstanceOf[SpinalStruct])
+    case TypeBitsP(param) => {
+      s"[${param}-1:0]"
+    }
   }
 
   def emitDirection(baseType: BaseType) = baseType.dir match {

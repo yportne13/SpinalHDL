@@ -47,6 +47,7 @@ object TypeUInt
 object TypeSInt
 object TypeEnum
 object TypeStruct
+case class TypeBitsP(param: String)
 
 
 trait DoubleLinkedContainerElement[SC  <: DoubleLinkedContainer[SC, SE], SE <: DoubleLinkedContainerElement[SC, SE]]{

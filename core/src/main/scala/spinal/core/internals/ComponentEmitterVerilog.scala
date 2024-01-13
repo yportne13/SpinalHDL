@@ -28,6 +28,11 @@ import spinal.core.sim.{SimPublic, TracingOff}
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+import spinal.core.parameter.BitsPAdd
+import spinal.core.parameter.BitsPSub
+import spinal.core.parameter.SIntPAdd
+import spinal.core.parameter.SIntPSub
+import spinal.core.parameter.SIntPMul
 
 class ComponentEmitterVerilog(
   val c                              : Component,
@@ -60,10 +65,32 @@ class ComponentEmitterVerilog(
   def getTrace() = new ComponentEmitterTrace(definitionAttributes :: beginModule :: endModule :: localparams :: declarations :: logics :: Nil, portMaps)
 
   def result: String = {
+    ///get  parameter
+    import scala.reflect.runtime.universe._
+    import scala.reflect.ClassTag
+    import spinal.core.parameter._
+
+    // 使用 Scala 反射来获取所有类型为 Param 的字段
+    def getAllParamsFromComponent(component: Component): List[Parameter] = {
+      val mirror = runtimeMirror(component.getClass.getClassLoader)
+      val instanceMirror = mirror.reflect(component)
+      val members = instanceMirror.symbol.info.members
+
+      // 遍历成员，找出所有类型为 Param 的字段
+      members.collect {
+        case m: TermSymbol if m.isVal && m.typeSignature <:< typeOf[Parameter] =>
+          instanceMirror.reflectField(m).get.asInstanceOf[Parameter]
+      }.toList
+    }
+    val params = getAllParamsFromComponent(component)
+    val param = if(params.isEmpty) "" else s""" #(
+      |  ${params.map(x => "parameter " + x.name + {if(x.default > 0) {" = " + x.default} else ""}).reduce((a, b) => a + ",\n  " + b)}
+      |)""".stripMargin
+    ///
     val ports = portMaps.map{ portMap => s"${theme.porttab}${portMap}\n"}.mkString + s");"
     val definitionComments = commentTagsToString(component.definition, "//")
     s"""
-      |${definitionComments}${definitionAttributes}module ${component.definitionName} (
+      |${definitionComments}${definitionAttributes}module ${component.definitionName}${param} (
       |${ports}
       |${beginModule}${localparams}
       |${declarations}
@@ -1613,7 +1640,9 @@ end
 
     //unsigned
     case  e: Operator.UInt.Add                        => operatorImplAsBinaryOperator("+")(e)
+    case  e: BitsPAdd                                 => operatorImplAsBinaryOperator("+")(e)
     case  e: Operator.UInt.Sub                        => operatorImplAsBinaryOperator("-")(e)
+    case  e: BitsPSub                                 => operatorImplAsBinaryOperator("-")(e)
     case  e: Operator.UInt.Mul                        => operatorImplAsBinaryOperator("*")(e)
     case  e: Operator.UInt.Div                        => operatorImplAsBinaryOperator("/")(e)
     case  e: Operator.UInt.Mod                        => operatorImplAsBinaryOperator("%")(e)
@@ -1638,8 +1667,11 @@ end
 
     //signed
     case  e: Operator.SInt.Add                        => operatorImplAsBinaryOperatorSigned("+")(e)
+    case  e: SIntPAdd                                 => operatorImplAsBinaryOperatorSigned("+")(e)
     case  e: Operator.SInt.Sub                        => operatorImplAsBinaryOperatorSigned("-")(e)
+    case  e: SIntPSub                                 => operatorImplAsBinaryOperatorSigned("-")(e)
     case  e: Operator.SInt.Mul                        => operatorImplAsBinaryOperatorSigned("*")(e)
+    case  e: SIntPMul                                 => operatorImplAsBinaryOperatorSigned("*")(e)
     case  e: Operator.SInt.Div                        => operatorImplAsBinaryOperatorSigned("/")(e)
     case  e: Operator.SInt.Mod                        => operatorImplAsBinaryOperatorSigned("%")(e)
 
