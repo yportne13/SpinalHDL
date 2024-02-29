@@ -404,7 +404,8 @@ class ComponentEmitterVerilog(
               val single_ordered = ordered.size == 1
               val wireAlign = ordered.reverse.map(e => emitAssignedExpression(e.dst)).mkString(", ")
               val comma = if (data == ios.last) " " else ","
-              if (single_ordered) Some((s"    .${portAlign} (", s"${wireAlign}[${data.getBitsWidth - 1}:0]", s")${comma} //~\n"))
+              val sizeString = if(data.getBitsWidth > 1) s"[${data.getBitsWidth - 1}:0]" else ""
+              if (single_ordered) Some((s"    .${portAlign} (", s"${wireAlign}${sizeString}", s")${comma} //~\n"))
               else Some((s"    .${portAlign} (", s"{${wireAlign}}", s")${comma} //~\n"))
             }
             case None => None
