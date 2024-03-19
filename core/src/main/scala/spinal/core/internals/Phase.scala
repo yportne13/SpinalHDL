@@ -2896,7 +2896,7 @@ object SpinalVerilogBoot{
     phases += new PhasePullClockDomains(pc)
 
     phases += new PhaseInferEnumEncodings(pc,e => if(e == `native`) binarySequential else e)
-    phases += new PhaseInferWidth(pc)
+    //phases += new PhaseInferWidth(pc)
     phases += new PhaseNormalizeNodeInputs(pc)
     phases += new PhaseRemoveIntermediateUnnameds(false)
     phases += new PhaseSimplifyNodes(pc)
